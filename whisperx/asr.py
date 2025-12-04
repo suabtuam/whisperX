@@ -197,6 +197,7 @@ class FasterWhisperPipeline(Pipeline):
         print_progress=False,
         combined_progress=False,
         verbose=False,
+        merge_audio_chunks=False,
     ) -> TranscriptionResult:
         if isinstance(audio, str):
             audio = load_audio(audio)
@@ -218,12 +219,13 @@ class FasterWhisperPipeline(Pipeline):
             merge_chunks = Pyannote.merge_chunks
 
         vad_segments = self.vad_model({"waveform": waveform, "sample_rate": SAMPLE_RATE})
-        vad_segments = merge_chunks(
-            vad_segments,
-            chunk_size,
-            onset=self._vad_params["vad_onset"],
-            offset=self._vad_params["vad_offset"],
-        )
+        if merge_audio_chunks:
+            vad_segments = merge_chunks(
+                vad_segments,
+                chunk_size,
+                onset=self._vad_params["vad_onset"],
+                offset=self._vad_params["vad_offset"],
+            )
         if self.tokenizer is None:
             language = language or self.detect_language(audio)
             task = task or "transcribe"
